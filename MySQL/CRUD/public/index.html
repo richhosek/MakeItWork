@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>MIW - MySQL - CRUD</title>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+</head>
+<body>
+    <h3>Make It Work - MySQL - CRUD</h3>
+
+    <form>
+        <label for="title">Title </label>
+        <input id="title" name="title"><br>
+        <label for="author">Author </label>
+        <input id="author" name="author"><br>
+        <input type="submit" id="add", name="add" value="Add Book">
+    </form>
+
+    <ul id="books"></ul>
+    <script>
+        $(function() {
+            // When we load this page, get all the books from the database
+            $.get("/api/book")
+                .then(function(books){
+                    // The data we get back from the api is a list of books
+                    books.forEach(book => {
+                        // for each book in the list
+                        // create a new <li> element whose text is the title and author
+                        // and append it to the <ul> in the HTML
+                        $("#books").append(
+                            $("<li>").text(`${book.title} - ${book.author} `)
+                                // Append a DELETE button to the <li>
+                                .append($("<button>")
+                                // We will use this class bind a click event to this button
+                                .addClass("deleteButton")
+                                .text("DELETE")
+                                // This attribute will identify which book we want to delete by ID
+                                .attr("data-id", book.id)
+                            )
+                        );
+                    });
+                });
+
+            /**
+             * Attach and event handler to the Add Book button
+             * that posts the information from the form to the Data API endpoint
+             * and reloads the page.
+             */
+            $("#add").on("click", function(event) {
+                event.preventDefault();
+                $.post("/api/book",
+                    {
+                        "title": $("#title").val().trim(),
+                        "author": $("#author").val().trim()
+                    }
+                )
+                .then(function() {
+                    // once we've successfully added the book, reload the page
+                    location.reload();
+                });
+            });
+
+            /**
+             * Attach an event handler to any buttons with the .deleteButton class
+             * which sends an ajax request using the DELETE Method to the Data API
+             * based on the id embedded in a data- attribute on the button
+             */
+            $(document).on("click", ".deleteButton", function(event) {
+                // this event handler can be attached to multiple elements
+                // to identify the element which has been clicked
+                // we use "this" which is the specific button that fired the event
+                let clickedButton = $(this);
+                // Using $() to wrap "this" so we can use jQuery methods on the button
+                let bookId = clickedButton.attr("data-id");
+                // create an ajax call using the DELETE method
+                // with the bookId extracted from the clicked button  
+                // as part of the URL
+                $.ajax({
+                    method: "DELETE",
+                    url: `/api/book/${bookId}`
+                })
+                .then(function(){
+                    // once we've successfully deleted the book, reload the page
+                    location.reload();
+                })
+            });
+        });
+
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+{
+  "name": "makeitwork-mysql-crud",
+  "version": "1.0.0",
+  "description": "Simplest example of MySQL Crud with Front End",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "MakeItWork"
+  },
+  "keywords": [
+    "mysql",
+    "crud"
+  ],
+  "author": "Rich Hosek",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "mysql": "^2.17.1"
+  }
+}
