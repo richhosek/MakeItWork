@@ -1,8 +1,10 @@
+var path = require("path");
 // Requiring necessary npm packages
 var express = require("express");
 var session = require("express-session");
 // Requiring passport as we've configured it
-var passport = require("./config/passport");
+var passport = require("passport");
+var LocalStrategy = require("passport-local").Strategy;
 
 // Setting up port 
 var PORT = process.env.PORT || 8080;
@@ -19,81 +21,87 @@ app.use(passport.session());
 
 // passport configuration
 // this creates a simple local strategy 
-// for purposes of demonstration, this does not use a database or external service, 
+// for purposes of demonstration, this does NOT use a database or external service, 
 // just assumes all users have a password of "password"
 passport.use(new LocalStrategy(
   // simple, static login strategy based on the username
   // "baduser" will be rejected and invalid username, everyone else has a password of "password"
   function(username, password, done) {
     // When a user tries to sign in this code runs
-    // If there's no user with the given email
+    // If we're trying to log in with an invalide username
     if (!username || username.toLowerCase() === "baduser") {
       return done(null, false, {
         message: "Incorrect username."
       });
     }
-    // If there is a user with the given email, but the password the user gives us is incorrect
+    // If we're using an invalid password
     else if (password != "password") {
       return done(null, false, {
         message: "Incorrect password."
       });
     }
-    // If none of the above, return the user
-    return done(null, {username});
+    // successful login, return the user -- which consists of an object holding the username
+    let user = {username};  
+    return done(null, user);
   }
 ));
 
 // In order to help keep authentication state across HTTP requests,
-// Sequelize needs to serialize and deserialize the user
-// Just consider this part boilerplate needed to make it all work
-passport.serializeUser(function(user, cb) {
-  cb(null, user);
+// passport needs methods to serialize and deseralize the user
+// this is a simple example, the serialzed user is the username -- which is stored in the session.
+passport.serializeUser(function(user, callback) {
+  callback(null, user.username);
 });
 
-passport.deserializeUser(function(obj, cb) {
-  cb(null, obj);
+// the deserialized user is an object with a username property -- which is availabe as request.user
+passport.deserializeUser(function(username, callback) {
+  callback(null, {username});
 });
 
 // Routes for pages
+// for this example, send requests for the site root to the /home route
 app.get("/", (request, response) => {
-  if (request.user) {
-    response.redirect("/home");
-  }
-  res.sendFile(path.join(__dirname, "../public/signup.html"));
+  response.redirect("/home");
 });
 
+// if there is no authenticated user, requests will get sent here and the user will see a login form
 app.get("/login", (request, response) => {
-  if (request.user) {
-    response.redirect("/home");
-  }
-  res.sendFile(path.join(__dirname, "../public/login.html"));
+  response.sendFile(path.join(__dirname, "./public/login.html"));
 })
 
-app.get("/logout", function(request, response) {
+// this route will logout the current user and redirect to the login page
+app.get("/logout", (request, response) => {
   request.logout();
-  response.redirect("/");
+  response.redirect("/login");
 });
 
+// Here we are creating a callback function to be used for routes that require authentication
+const passportAuthenticationMiddleware = (request, response, next) => {
+  if (request.user) {
+    return next();
+  }
+  // If the user isn't logged in, redirect them to the login page
+  return response.redirect("/login");
+}
+// this is an example of a page route that you want secured.
+// you pass it the authentication middleware callback as the second parameter
+// if there is no authenticated user, it redirects to the login page
 app.get("/home", 
   // the .get() method can accecpt more than one callback
   // in this case, we are including a middleware callback that checks to see if the request has a user
   // which means that the user has signed in. 
-  // normally, this function would be required from a module for easier reuse, 
-  // but we're showing you the full function here for convenience
-  (request, response, next) => {
-    if (request.user) {
-      return next();
-    }
-  
-    // If the user isn't logged in, redirect them to the login page
-    return response.redirect("/");
-  },
+  passportAuthenticationMiddleware,
   // once the authentication middleware has executed, move on to regular route handling callback
   (request, response) => {
-    response.sendFile(path.join(__dirname, "../public/home.html"));
+    response.sendFile(path.join(__dirname, "./public/home.html"));
   }
 );
 
+// API Routes
+// when we submit the login form, it posts a request to this route,
+// which uses passport authnetication, in this case the local strategy we defined above
+// then it returns the deserialized user
+// 401 responses are handled by the local strategy
 app.post("/api/login", 
   passport.authenticate("local"), 
   (request, response) => {
@@ -101,16 +109,12 @@ app.post("/api/login",
   }
 );
 
-app.post("/api/signup", function(request, response) {
-  response.redirect(307, "/api/login");
-});
-// Requiring our routes
-// require("./routes/html-routes.js")(app);
-// require("./routes/api-routes.js")(app);
+// allows us to provide a way for the front end to get the currently logged in user
+app.get("/api/user", (request, response) => {
+  // send back the request.user -- if there is one
+  response.json(request.user);
+})
 
-// Syncing our database and logging a message to the user upon success
-db.sequelize.sync().then(function() {
-  app.listen(PORT, function() {
-    console.log("==> 🌎  Listening on port %s. Visit http://localhost:%s/ in your browser.", PORT, PORT);
-  });
+app.listen(PORT, function() {
+  console.log("==> 🌎  Listening on port %s. Visit http://localhost:%s/ in your browser.", PORT, PORT);
 });
