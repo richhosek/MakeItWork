@@ -1,15 +1,14 @@
-import React from "react";
+import React, { useContext } from "react";
 import { IdentityContext } from "./identity-context";
 
 function User() {
+
+    const identity = useContext(IdentityContext)
+    
     return (
-        <IdentityContext.Consumer>
-            {({user}) => (
             <div style={{width: 200, height: 200, backgroundColor: "darkBlue", color: "white"}}>
-                <h3>{user.username}</h3>
+                <h3>{identity.user.username}</h3>
             </div>
-            )}
-        </IdentityContext.Consumer>
     )
 }
 
