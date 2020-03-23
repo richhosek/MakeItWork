@@ -78,7 +78,7 @@ class App extends Component {
       }}>
         <div className="App">
           <Nav />
-        <h1>React-Passport-Context</h1>
+        <h1>React-Passport-Context {this.state.user.username}</h1> 
         <IdentityContext.Consumer>
           {({user, loggedIn}) => (
             <h2>{this.state.errorMessage 
