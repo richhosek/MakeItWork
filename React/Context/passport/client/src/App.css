@@ -22,3 +22,18 @@
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+.blue {
+  background-color: blue;
+  color: white;
+  padding: 1em;
+  display: inline-block;
+  margin: 1em;
+}
+
+.red {
+  background-color: red;
+  color: white;
+  padding: 1em;
+  display: inline-bl;
+}
