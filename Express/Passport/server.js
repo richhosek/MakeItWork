@@ -77,6 +77,7 @@ app.get("/logout", (request, response) => {
 
 // Here we are creating a callback function to be used for routes that require authentication
 const passportAuthenticationMiddleware = (request, response, next) => {
+  console.log("USER", request.user)
   if (request.user) {
     return next();
   }
