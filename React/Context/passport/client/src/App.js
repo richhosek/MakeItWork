@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import "./App.css";
 import axios from "axios";
-import { IdentityContext } from "./identity-context";
+import { IdentityContext } from "./IdentityContext";
 import Nav from "./components/Nav"
 import User from "./components/User"
 import BlueBoxProps from "./components/BlueBoxProps";

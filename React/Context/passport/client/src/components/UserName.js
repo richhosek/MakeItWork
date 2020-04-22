@@ -1,5 +1,5 @@
 import React from "react";
-import { IdentityContext } from "../identity-context";
+import { IdentityContext } from "../IdentityContext";
 
 function UserName() {
     return (
